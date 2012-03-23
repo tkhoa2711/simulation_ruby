@@ -13,12 +13,14 @@ end
 def parse(file_name="", arg)
 	#remove comment
 	File.open(file_name) do |file|
-		file.each_line {
-			|line| puts line.reverse
-			puts line
-			arg[0] = line[0]
-			arg[1] = line[1]
-		}
+		file.each_line do |line|
+      arg = line.split
+      puts arg
+    end
 	end
 end
-
+a = 1
+b = 2
+c = 3
+parse("test.txt", [a, b, c])
+puts a, b, c
