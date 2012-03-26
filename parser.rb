@@ -1,4 +1,4 @@
-
+require 'Time'
 # Read in a file
 def read_file(file_name="")
 	File.open(file_name) do |file|
@@ -10,17 +10,26 @@ def read_file(file_name="")
 	end
 end
 
-def parse(file_name="", arg)
+def parse(file_name, arg, position)
 	#remove comment
-	File.open(file_name) do |file|
-		file.each_line do |line|
-      arg = line.split
-      puts arg
+  begin
+    File.open(file_name) do |file|
+      file.each_with_index do |line, index|
+        if index < 3 then
+          next
+        end
+        word = line.split
+        arg[index-3] = word[position]
+      end
     end
-	end
+  rescue => err
+    puts "Exception: #{err}"
+    err
+  end
 end
-a = 1
-b = 2
-c = 3
-parse("test.txt", [a, b, c])
-puts a, b, c
+
+arg = []
+parse("call_arrival_g04.txt", arg, 1)
+puts arg.inspect
+arg.each_with_index {|element, index| arg[index] = Time.parse(element)}
+puts arg.inspect
