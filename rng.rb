@@ -7,14 +7,14 @@ class ProbabilityDistribution
 
   def initialize(sample)
     @sum = sample.sum
-    @size = sample.size
+    @size = sample.length
     @average = @sum.to_f / @size
     # A number of way to calculate the average of an array:
-    # sample.inject{ |sum, element| sum + element }.to_f / sample.size
+    # sample.inject{ |sum, element| sum + element }.to_f / sample.length
     # ------
-    # sample.inject(0.0) { |sum, element| sum + element } / sample.size
+    # sample.inject(0.0) { |sum, element| sum + element } / sample.length
     # ------
-    # sample.inject(:+).to_f / sample.size
+    # sample.inject(:+).to_f / sample.length
   end
 
 end
@@ -129,7 +129,7 @@ class DistributionTest
 
   def test_exponential(distribution)
     rate = distribution.average
-    critical_value = rate / Math.sqrt(distribution.size)
+    critical_value = rate / Math.sqrt(distribution.length)
     #d_plus =
   end
 

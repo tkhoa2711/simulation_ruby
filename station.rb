@@ -5,9 +5,6 @@ class Station
 
   # Initialize a base station with a specific id
   def initialize(id)
-    if id < 0
-      return "error"
-    end
     @id = id
     @max_channel = 10
     @max_reserve = 1
@@ -22,7 +19,7 @@ class Station
       puts "Maximum number of channel exceeded!"
       return false
     end
-    if not free_channel_avail and not free_reserve_avail
+    unless free_channel_avail or free_reserve_avail
       puts "No more channel for acquiring!"
       return false
     end
@@ -31,8 +28,8 @@ class Station
     return true
   end
 
-  # Acquire a handover
-  def acquire_handover
+  # Acquire a reserved channel for handover
+  def acquire_reserved
     if not free_channel_avail
       puts "No free channel available for handover"
       return false
@@ -54,8 +51,8 @@ class Station
     return true
   end
 
-  # Release a handover
-  def release_handover
+  # Release a handover on reserved channel
+  def release_reserved
     if @num_channel == 0
       puts "all channel are released!"
       return false
