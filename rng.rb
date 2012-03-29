@@ -115,13 +115,13 @@ end
 
 # Class for testing of distributions
 class DistributionTest
-  def initialize(distribution)
-
+  def initialize(*distribution)
+    @distribution = ProbabilityDistribution.new(distribution)
   end
 
   # Estimation of parameters for a distribution
   # Using MLE (Maximum-likelihood estimator)
-  def parameter_estimation(type, *beta)
+  def parameter_estimation(type, beta)
     if type == 'exponential'
       beta = sample.sum / sample.length
     end
@@ -139,7 +139,7 @@ class DistributionTest
   end
 
   def chi_square_test
-    alpha
+
   end
 end
 

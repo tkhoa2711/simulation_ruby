@@ -1,73 +1,60 @@
 
 class Station
-  attr_accessor :max_channel, :max_length, :num_channel, :max_reserve, :num_reserve
+  attr_accessor :max_channel, :max_length, :max_reserved, :free_channel, :reserved_channel, :next
   attr_reader :id
 
   # Initialize a base station with a specific id
-  def initialize(id)
+  def initialize(id, max_channel, max_length, max_reserved)
     @id = id
-    @max_channel = 10
-    @max_reserve = 1
-    @max_length = 2000
-    @num_channel = 0
-    @num_reserve = 0
+    @max_channel = max_channel
+    @max_length = max_length
+    @max_reserved = max_reserved
+    @max_free = @max_channel - @max_reserved
+    @free_channel = []
+    @reserved_channel = []
+    @next = nil
   end
 
-  # Acquire new channel
-  def acquire_channel
-    if @num_channel > @max_channel
-      puts "Maximum number of channel exceeded!"
-      return false
-    end
-    unless free_channel_avail or free_reserve_avail
+  # Acquire new available free channel
+  def acquire_channel(call_id)
+    unless avail_free_channel
       puts "No more channel for acquiring!"
       return false
     end
-    @num_channel += 1
-    puts "New channel acquired."
+    @free_channel << call_id
+    puts "New channel acquired from station #{@id}."
     return true
   end
 
   # Acquire a reserved channel for handover
-  def acquire_reserved
-    if not free_channel_avail
+  def acquire_reserved(call_id)
+    if not avail_free_channel
       puts "No free channel available for handover"
       return false
     end
-    @num_channel += 1
-    @num_reserve += 1
-    puts "New handover"
+    @reserved_channel << call_id
+    puts "New handover from station #{@id}"
     return true
   end
 
-  # Release a channel
-  def release_channel
-    if @num_channel == 0
-      puts "all channel are released!"
-      return false
+  # Release a channel acquired by a @param call_id
+  def release_channel(call_id)
+    if @free_channel.delete(call_id) == call_id
+      "Free channel released at station #{@id}"
+      return true
     end
-    puts "Channel release at station ", @id
-    @num_channel -= 1
-    return true
-  end
-
-  # Release a handover on reserved channel
-  def release_reserved
-    if @num_channel == 0
-      puts "all channel are released!"
-      return false
+    if @reserved_channel.delete(call_id) == call_id
+      puts "Channel (handover) release at station #{@id}"
+      return true
     end
-    puts "Channel (handover) release at station ", @id
-    @num_channel -= 1
-    @num_reserve -= 1
-    return true
+    return false
   end
 
-  def free_channel_avail
-    return @max_channel - @num_channel
+  def avail_free_channel
+    return @max_free - @free_channel.length
   end
 
-  def free_reserve_avail
-    return @max_reserve - @num_reserve
+  def avail_reserved_channel
+    return @max_reserved - @reserved_channel.length
   end
 end
