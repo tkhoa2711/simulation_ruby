@@ -1,4 +1,5 @@
 require_relative 'station'
+#include Simulator
 
 # Call initialization event
 class CallInit

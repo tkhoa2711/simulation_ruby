@@ -1,4 +1,5 @@
 require 'Time'
+
 # Read in a file
 def read_file(file_name="")
 	File.open(file_name) do |file|
@@ -15,9 +16,7 @@ def parse(file_name, arg, position)
   begin
     File.open(file_name) do |file|
       file.each_with_index do |line, index|
-        if index < 3 then
-          next
-        end
+        next if index < 3
         word = line.split
         arg[index-3] = word[position]
       end

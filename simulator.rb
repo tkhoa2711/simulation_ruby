@@ -5,10 +5,9 @@
 # Dir[File.dirname(__FILE__) + '/*.rb'].each {|file| require file }
 %w{parser rng station}.each {|x| require_relative x}
 
+#------------------------------------------------------------------------------
 # Call initialization event
 class CallInit
-  attr_reader :id
-
   def initialize(call_id, time, speed, station, position, duration)
     @id = call_id
     @time = time
@@ -19,15 +18,13 @@ class CallInit
   end
 
   def execute
-    #Simulator::Simulator.init_call_event(@station, @id)
+    Simulator::Simulator.init_call_event(@id, @station)
     "CallInit: id = #{@id}, time = #{@time}, station = #{@station}, position = #{@position}"
   end
 end
 
 # Call termination event
 class CallTerminate
-  attr_reader :id
-
   def initialize(call_id, time, station)
     @id = call_id
     @time = time
@@ -35,14 +32,13 @@ class CallTerminate
   end
 
   def execute
+    Simulator::Simulator.terminate_call_event(@id, @station)
     "CallTerm: id = #{@id}, time = #{@time}, station = #{@station}"
   end
 end
 
 # Call handover event
 class CallHandover
-  attr_reader :id
-
   def initialize(call_id, time, speed, station)
     @id = call_id
     @time = time
@@ -51,10 +47,11 @@ class CallHandover
   end
 
   def execute
+    Simulator::Simulator.handover_event(@id, @station)
     "CallHand: id = #{@id}, time = #{@time}, station = #{@station}"
   end
 end
-
+#------------------------------------------------------------------------------
 module Simulator
 # Simulation system
 class Simulator
@@ -72,10 +69,9 @@ class Simulator
     # Distribution init
   end
 
+  # Remove all events of a call from the queue after it has been blocked or dropped
   def remove_from_queue(call_id)
-    @event.each_value do |eventList|
-      eventList.delete_if {|event| event.id == call_id}
-    end
+    @event.each_value {|eventList| eventList.delete_if {|event| event["id"] == call_id}}
   end
 
   # Block a call -> delete any event from the queue with the same call_id
@@ -89,7 +85,7 @@ class Simulator
     remove_from_queue(call_id)
   end
 
-  def init_call_event(call_id, station)
+  def self.init_call_event(call_id, station)
     puts 'init_call_event'
     unless @station[station].acquire_channel(call_id)
       block(call_id)
@@ -98,11 +94,11 @@ class Simulator
     return true
   end
 
-  def terminate_call_event(call_id, station)
+  def self.terminate_call_event(call_id, station)
     @station[station].release_channel(call_id)
   end
 
-  def handover_event(call_id, station)
+  def self.handover_event(call_id, station)
     @station[station].release(call_id)
     unless @station[station].next.acquire_channel(call_id)
       unless @station[station].next.acquire_reserved(call_id)
@@ -147,17 +143,17 @@ class Simulator
       start_station = @base_station.generate
       end_station = start_station + (duration * speed).floor.quo(@channel_length).to_i
 
-      # Check empty element in array => There should be some other better implementation ???
-      # TODO: Alternative solution
-      [init_call, terminate_call].each do |time|
-        unless @event.has_key?(time)
-          @event[time] = []
-        end
-      end
+      # Check empty element in array
+      [init_call, terminate_call].each {|time| @event[time] = [] unless @event.has_key?(time)}
 
       # Add to event list when call is initiated and terminated
-      call_init_event = CallInit.new(id, init_call, speed, start_station, position, duration)
-      call_terminate_event = CallTerminate.new(id, terminate_call, end_station)
+      # call_init_event = CallInit.new(id, init_call, speed, start_station, position, duration)
+      # call_terminate_event = CallTerminate.new(id, terminate_call, end_station)
+      call_init_event = { :id => id, :time => init_call, :speed => speed, :station => start_station,
+                          :position => position, :duration => duration,
+                          :execute => method(:init_call_event)}
+      call_terminate_event = { :id => id, :time => terminate_call, :station => end_station,
+                               :execute => method(:terminate_call_event)}
       @event[init_call] << call_init_event
       @event[terminate_call] << call_terminate_event
 
@@ -168,11 +164,12 @@ class Simulator
 
       # Add to the event list every time a handover happens
       while time_remain > handover_call
-        unless @event.has_key?(handover_call)
-          @event[handover_call] = []
-        end
+        # Checking for uninitialized element
+        @event[handover_call] = [] unless @event.has_key?(handover_call)
         start_station += 1
-        call_handover_event = CallHandover.new(id, handover_call, speed, start_station)
+        # call_handover_event = CallHandover.new(id, handover_call, speed, start_station)
+        call_handover_event = { :id => id, :time => handover_call, :speed => speed, :station => start_station,
+                                :execute => method(:handover_event)}
         @event[handover_call] << call_handover_event
         time_to_next_station = @channel_length / speed
         handover_call += time_to_next_station
@@ -199,7 +196,7 @@ class Simulator
     File.open("output.txt", "w") do |file|
       @event.each do |time, eventList|
         eventList.each do |event|
-          file.puts "#{event.execute}"
+          file.puts "#{event[:execute]}"
         end
       end
     end

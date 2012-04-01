@@ -86,9 +86,7 @@ end
 # Uniform Distribution
 class UniformDistribution
   def initialize(min = 0.0, max = 1.0)
-    if min > max
-      return "error"
-    end
+    return "error" if min > max
     @min = min
     @max = max
     @range = @max - @min

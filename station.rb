@@ -40,7 +40,7 @@ class Station
   # Release a channel acquired by a @param call_id
   def release_channel(call_id)
     if @free_channel.delete(call_id) == call_id
-      "Free channel released at station #{@id}"
+      puts "Free channel released at station #{@id}"
       return true
     end
     if @reserved_channel.delete(call_id) == call_id
